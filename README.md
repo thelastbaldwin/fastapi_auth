@@ -10,12 +10,17 @@ the user is granted an access token, with a configurable expiration time. The us
 1. create a virtual environment
 2. `pip install -r requirements.txt`
 
-create a `.env` file with the following values:
+### Environment Variables
 
-| Key          | Value                                       |
-| ------------ | ------------------------------------------- |
-| `SECRET_KEY` | output of `openssl rand -hex 32` or similar |
+| Key          | Value                                            |
+| ------------ | ------------------------------------------------ |
+| `SECRET_KEY` | output of `openssl rand -hex 32` or similar      |
+| `DB_URL`     | `sqlite:///auth.db` any db supported by sqlmodel |
 
-## Runing the Server
+## Running the Server
 
-You can simply run `make` or run the dev command therein.
+Run `make` or modify the dev command therein.
+
+## Tests
+
+`make test`

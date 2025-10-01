@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie
 from typing import Annotated
 from datetime import timedelta
-from sqlmodel import Session
 
 from fastapi.security import OAuth2PasswordRequestForm
 from src.data.init import SessionDep
-from src.model.user import NewUser, User
+from src.model.user import NewUser, User, PublicUser
 from src.model.auth import Token
 from src.service.user import add_user
 from src.service.auth import authenticate_user, create_access_token, get_current_active_user, decode_token
@@ -15,9 +14,9 @@ from src.errors import Duplicate
 settings = get_settings()
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
-@router.post('/register', status_code=201)
+@router.post('/register', status_code=201, response_model=PublicUser)
 async def register(
-    new_user: Annotated[NewUser, Depends()],
+    new_user: NewUser,
     db: SessionDep
     ):
     try:
@@ -62,7 +61,7 @@ async def login_for_access_token(
 
     # set refresh token on response as httpOnly cookie
     refresh_token = create_access_token(
-        data={"sub": user.id}, expires_delta=timedelta(minutes=settings.refresh_token_expire_minutes))
+        data={"sub": str(user.id)}, expires_delta=timedelta(minutes=settings.refresh_token_expire_minutes))
     response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
 
     return Token(access_token=access_token, token_type="bearer")

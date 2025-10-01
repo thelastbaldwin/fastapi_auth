@@ -12,6 +12,7 @@ from src.data.init import SessionDep
 from src.data.user import get_user, get_user_by_username
 from src.util.auth import verify_password
 from src.config import get_settings
+from src.errors import Missing
 
 settings = get_settings()
 
@@ -35,7 +36,10 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 def authenticate_user(username: str, password: str, db: Session):
-    user = get_user_by_username(username, db)
+    try:
+        user = get_user_by_username(username, db)
+    except Missing:
+        return False
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
