@@ -1,15 +1,16 @@
-from pydantic import BaseModel
+from sqlmodel import Field, SQLModel
 
-class BaseUser(BaseModel):
-    username: str
-    email: str | None = None
-    full_name: str | None = None
+class PublicUser(SQLModel):
+    id: int | None = Field(default=None, primary_key=True, index=True)
+    username: str = Field(index = True, unique = True)
+    full_name: str | None = Field(default=None)
 
-class User(BaseUser):
-    disabled: bool | None = None
+class BaseUser(PublicUser):
+    email: str  = Field(unique=True)
+    disabled: bool = Field(default=False)
 
 class NewUser(BaseUser):
-    password: str
+    password: str = Field()
 
-class UserInDb(User):
-    hashed_password: str
+class User(BaseUser, table=True):
+    hashed_password: str = Field()

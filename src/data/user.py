@@ -1,29 +1,38 @@
-from ..model.user import UserInDb
-from src.errors import Duplicate
+from sqlmodel import select, Session
+from sqlalchemy.exc import IntegrityError
+from src.errors import Duplicate, Missing
+from src.model.user import User, PublicUser
 
-fake_users_db = {
-   "steve": {
-        "username": "steve",
-        "email": "stv.mnr@gmail.com",
-        "full_name": "steve minor",
-        "disabled": False,
-        "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$efC7Uca0zSdR/d16l7wenA$cBlA2vxc/nYqlm4qKMCn2tnJBmMBgq/YdBon8SZ7J5k"
-        }
-}
+def add_user(user: User, db: Session):
+    try:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    except IntegrityError:
+        raise Duplicate(msg = f"User {user.username} already exists")
 
-def add_user(username, full_name, email, hashed_password):
-    if username in fake_users_db:
-        raise Duplicate("Username already exists")
-    fake_users_db[username] = {
-        "username": username,
-        "full_name": full_name,
-        "email": email,
-        "hashed_password": hashed_password,
-        "disabled": False
-    } 
-    return get_user(username)
+    return get_user(user.username, db)
 
-def get_user(username: str):
-    if username in fake_users_db:
-        user_dict = fake_users_db[username]
-        return UserInDb(**user_dict).model_dump()
+def get_user(username: str, db: Session) -> User:
+    statement = select(User).where(User.username == username)
+    result = db.exec(statement).first()
+
+    if not result:
+        raise Missing(msg=f"User {username} not found")
+    
+    return result
+
+def get_public_user(username: str, db: Session) -> PublicUser:
+
+    statement = select(User).where(User.username == username)
+    result = db.exec(statement).first()
+
+    if not result:
+        raise Missing(msg=f"User {username} not found")
+    
+    return PublicUser(
+        id=result.id,
+        username=result.username, 
+        full_name=result.full_name
+    )
+    
