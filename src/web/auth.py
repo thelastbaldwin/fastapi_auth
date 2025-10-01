@@ -37,7 +37,7 @@ async def refresh_access_token(
 
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": current_user.username}, expires_delta=access_token_expires
+        data={"sub": str(current_user.id)}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 
@@ -57,12 +57,12 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
 
     # set refresh token on response as httpOnly cookie
     refresh_token = create_access_token(
-        data={"sub": user.username}, expires_delta=timedelta(minutes=settings.refresh_token_expire_minutes))
+        data={"sub": user.id}, expires_delta=timedelta(minutes=settings.refresh_token_expire_minutes))
     response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
 
     return Token(access_token=access_token, token_type="bearer")

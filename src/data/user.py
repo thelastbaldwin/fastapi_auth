@@ -1,4 +1,4 @@
-from sqlmodel import select, Session
+from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 from src.errors import Duplicate, Missing
 from src.model.user import User, PublicUser
@@ -11,9 +11,9 @@ def add_user(user: User, db: Session):
     except IntegrityError:
         raise Duplicate(msg = f"User {user.username} already exists")
 
-    return get_user(user.username, db)
+    return get_user(user.id, db)
 
-def get_user(username: str, db: Session) -> User:
+def get_user_by_username(username: str, db: Session) -> User:
     statement = select(User).where(User.username == username)
     result = db.exec(statement).first()
 
@@ -22,17 +22,24 @@ def get_user(username: str, db: Session) -> User:
     
     return result
 
-def get_public_user(username: str, db: Session) -> PublicUser:
+def get_user(user_id: str, db: Session) -> User:
+    user = db.get(User, user_id)
 
-    statement = select(User).where(User.username == username)
-    result = db.exec(statement).first()
+    if not user:
+        raise Missing(msg=f"User {user_id} not found")
+    
+    return user
 
-    if not result:
-        raise Missing(msg=f"User {username} not found")
+def get_public_user(user_id: str, db: Session) -> PublicUser:
+
+    user = get_user(user_id, db)
+
+    if not user:
+        raise Missing(msg=f"User {user_id} not found")
     
     return PublicUser(
-        id=result.id,
-        username=result.username, 
-        full_name=result.full_name
+        id=user.id,
+        username=user.username, 
+        full_name=user.full_name
     )
     

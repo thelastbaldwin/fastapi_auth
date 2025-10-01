@@ -70,7 +70,7 @@ def test_get_user(db):
     )
     data.add_user(test_user, db)
 
-    resp = data.get_user(test_user.username, db)
+    resp = data.get_user(test_user.id, db)
 
     assert test_user.username == resp.username
     assert test_user.full_name == resp.full_name
@@ -81,7 +81,7 @@ def test_get_user(db):
 
 def test_user_missing(db):
     with pytest.raises(Missing):
-        data.get_user("bad_name", db)
+        data.get_user(1, db)
 
 def test_get_public_user(db):
     test_user = User(
@@ -92,7 +92,7 @@ def test_get_public_user(db):
     )
     data.add_user(test_user, db)
 
-    resp = data.get_public_user(test_user.username, db)
+    resp = data.get_public_user(test_user.id, db)
 
     assert resp.id is not None
     assert resp.username == test_user.username

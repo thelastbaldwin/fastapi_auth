@@ -9,7 +9,7 @@ from jwt.exceptions import InvalidTokenError
 from src.model.user import User
 from src.model.auth import TokenData
 from src.data.init import SessionDep
-from src.data.user import get_user
+from src.data.user import get_user, get_user_by_username
 from src.util.auth import verify_password
 from src.config import get_settings
 
@@ -34,9 +34,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, key=settings.secret_key, algorithm=settings.user_token_algorithm)
     return encoded_jwt
 
-
 def authenticate_user(username: str, password: str, db: Session):
-    user = get_user(username=username, db=db)
+    user = get_user_by_username(username, db)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -46,17 +45,17 @@ def authenticate_user(username: str, password: str, db: Session):
 def decode_token(token) -> TokenData:
     try:
         payload = jwt.decode(token, key=settings.secret_key, algorithms=[settings.user_token_algorithm], options={"verify_exp": True})
-        username = payload.get("sub")
-        if username is None:
+        user_id = payload.get("sub")
+        if user_id is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(user_id=int(user_id))
         return token_data
     except InvalidTokenError:
         raise credentials_exception
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: SessionDep):
-    token_data = decode_token(token)
-    user = get_user(username=token_data.username, db=db)
+    token_data: TokenData = decode_token(token)
+    user = get_user(token_data.user_id, db)
     if user is None:
         raise credentials_exception
     return user
