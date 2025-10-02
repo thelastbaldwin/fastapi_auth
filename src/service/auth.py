@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, List
 from sqlmodel import Session
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -9,7 +9,7 @@ from jwt.exceptions import InvalidTokenError
 from src.model.auth import TokenData, User, NewUser
 from src.data.init import SessionDep
 import src.data.user as userData
-from src.util.auth import verify_password, get_password_hash
+from src.util.auth import verify_password, get_password_hash, all_scopes
 from src.config import get_settings
 from src.errors import Missing
 
@@ -79,3 +79,11 @@ def get_current_active_user(
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive User")
     return current_user
+
+def get_current_active_user_with_all_scopes(scopes: List[str]):
+    def inner_function(current_user: Annotated[User, Depends(get_current_active_user)]):
+        if all_scopes(current_user, scopes):
+            return current_user
+        raise credentials_exception
+
+    return inner_function

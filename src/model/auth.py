@@ -1,20 +1,21 @@
 from sqlmodel import Field, SQLModel, Relationship
-from pydantic import BaseModel
 
-class Token(BaseModel):
+class Token(SQLModel):
     access_token: str
     token_type: str
 
-class TokenData(BaseModel):
+class TokenData(SQLModel):
     user_id: int | None = None
 
 class UserScope(SQLModel, table = True):
     user_id: int = Field(default=None, foreign_key="user.id", primary_key=True)
     scope_id: int = Field(default=None, foreign_key="scope.id", primary_key=True)
 
-class Scope(SQLModel, table=True):
+class NewScope(SQLModel):
+    name: str = Field(unique=True, index=True)
+
+class Scope(NewScope, table=True):
     id: int | None = Field(default = None, primary_key=True, index=True)
-    name: str = Field(unique=True)
     users: list["User"] = Relationship(back_populates="scopes", link_model=UserScope)
 
 class PublicUser(SQLModel):

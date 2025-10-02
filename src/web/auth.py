@@ -5,12 +5,18 @@ from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
 from src.data.init import SessionDep
 from src.model.auth import NewUser, User, PublicUser, Token
-from src.service.auth import add_user, authenticate_user, create_access_token, get_current_active_user, decode_token
+from src.service.auth import add_user, authenticate_user, create_access_token, get_current_active_user, decode_token, get_current_active_user_with_all_scopes
 from src.config import get_settings
 from src.errors import Duplicate
 
 settings = get_settings()
 router = APIRouter(prefix="/auth", tags=["authentication"])
+
+def access_token_payload(user: User):
+    return {
+        "sub": str(user.id),
+        "scope": " ".join([scope.name for scope in user.scopes])
+    }
 
 @router.post('/register', status_code=201, response_model=PublicUser)
 async def register(
@@ -34,7 +40,7 @@ async def refresh_access_token(
 
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": str(current_user.id)}, expires_delta=access_token_expires
+        data=access_token_payload(current_user), expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 
@@ -54,7 +60,7 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": str(user.id)}, expires_delta=access_token_expires
+        data=access_token_payload(user), expires_delta=access_token_expires
     )
 
     # set refresh token on response as httpOnly cookie
@@ -63,3 +69,5 @@ async def login_for_access_token(
     response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
 
     return Token(access_token=access_token, token_type="bearer")
+
+                 

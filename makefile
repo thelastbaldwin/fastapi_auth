@@ -7,3 +7,7 @@ test: export DB_URL=sqlite://
 test: export SECRET_KEY=$(shell openssl rand -hex 32)
 test:
 	pytest -v --capture=no src/test
+
+keys:
+	ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key
+	openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub

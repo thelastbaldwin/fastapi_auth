@@ -9,11 +9,8 @@ router = APIRouter(prefix="/user", tags=["user"])
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
+    """
+        This is just an example of a protected route. If you register and then 
+        request a token via /auth/token you will be able to access this endpoint
+    """
     return current_user
-
-
-@router.get("/me/items/")
-async def read_own_items(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-):
-    return [{"item_id": "Foo", "owner": current_user.username}]

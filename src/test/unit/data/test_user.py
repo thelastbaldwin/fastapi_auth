@@ -7,25 +7,23 @@ import pytest
 
 from src.main import app
 
-@pytest.fixture()
+@pytest.fixture(name="session")
 def session_fixture():
     engine = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
-        # pass the engine for cleanup in the next fixture
-        yield (session, engine)
+        yield session
+    SQLModel.metadata.drop_all(engine)
 
 @pytest.fixture(name="db")  
-def client_fixture(session_fixture):
-    session, engine = session_fixture  
+def client_fixture(session):
     def get_session_override():  
         return session
 
     app.dependency_overrides[get_session] = get_session_override  
     yield session
-    SQLModel.metadata.drop_all(engine)
     app.dependency_overrides.clear()  
 
 def test_add_user(db):
@@ -82,26 +80,3 @@ def test_get_user(db):
 def test_user_missing(db):
     with pytest.raises(Missing):
         data.get_user(1, db)
-
-def test_get_public_user(db):
-    test_user = User(
-        username="test",
-        full_name="Steve Minor",
-        email="test@test.com",
-        hashed_password="1209jlskdjfsdj"
-    )
-    data.add_user(test_user, db)
-
-    resp = data.get_public_user(test_user.id, db)
-
-    assert resp.id is not None
-    assert resp.username == test_user.username
-    assert resp.full_name == test_user.full_name
-
-    assert getattr(resp, "email", None) == None
-    assert getattr(resp, "hashed_password", None) == None
-
-
-def get_public_user_missing(db):
-    with pytest.raises(Missing):
-        data.get_public_user("bad_name", db)

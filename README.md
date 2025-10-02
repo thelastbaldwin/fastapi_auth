@@ -1,6 +1,6 @@
-# FastAPI Auth
+# FastAPI Auth Service
 
-I created this template to satisfy a requirement for basic user auth. This template implements the JWT approach outlined [here](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/?h=jwt), but with (arguably) improved organization as well as the ability to refresh auth tokens.
+I created this to satisfy requirements for basic user auth. This template implements the JWT approach outlined [here](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/?h=jwt), but with (arguably) improved organization as well as the ability to refresh auth tokens.
 
 This template implements a very basic placeholder user class, where the user authenticates with a username and password. The password is hashed, compared to what's in the database and, if successful,
 the user is granted access and refresh tokens. The user can get a new access token by logging in again, or making a call to `/refresh`
@@ -12,14 +12,21 @@ the user is granted access and refresh tokens. The user can get a new access tok
 
 ### Environment Variables
 
-| Key          | Value                                            |
-| ------------ | ------------------------------------------------ |
-| `SECRET_KEY` | output of `openssl rand -hex 32` or similar      |
+| Key          | Value                                            | Purpose                |
+| ------------ | ------------------------------------------------ | ---------------------- |
+| `SECRET_KEY` | output of `openssl rand -hex 32` or similar      | Used to hash passwords |
 | `DB_URL`     | `sqlite:///auth.db` any db supported by sqlmodel |
 
 ## Running the Server
 
 Run `make` or modify the dev command therein.
+
+## Initial Setup
+
+You will need to manually create several scopes in your db in order to initially authorize a user to manage scopes via the API.
+The necessary scopes are called out at `/docs`.
+
+After that user has the proper scopes, they can manage other users' scopes
 
 ## Tests
 

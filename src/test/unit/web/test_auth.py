@@ -8,26 +8,24 @@ import pytest
 
 from src.main import app
 
-@pytest.fixture()
+@pytest.fixture(name="session")
 def session_fixture():
     engine = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
-        # pass the engine for cleanup in the next fixture
-        yield (session, engine)
+        yield session
+    SQLModel.metadata.drop_all(engine)
 
 @pytest.fixture(name="db")  
-def client_fixture(session_fixture):
-    session, engine = session_fixture  
+def client_fixture(session):
     def get_session_override():  
         return session
 
     app.dependency_overrides[get_session] = get_session_override  
     yield session
-    SQLModel.metadata.drop_all(engine)
-    app.dependency_overrides.clear()
+    app.dependency_overrides.clear()  
 
 
 def test_register(db):
