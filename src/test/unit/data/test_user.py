@@ -1,5 +1,5 @@
 from sqlmodel import create_engine, SQLModel, Session, StaticPool
-from src.model.user import User
+from src.model.auth import User
 import src.data.user as data
 from src.data.init import get_session 
 from src.errors import Duplicate, Missing

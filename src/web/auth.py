@@ -4,10 +4,8 @@ from datetime import timedelta
 
 from fastapi.security import OAuth2PasswordRequestForm
 from src.data.init import SessionDep
-from src.model.user import NewUser, User, PublicUser
-from src.model.auth import Token
-from src.service.user import add_user
-from src.service.auth import authenticate_user, create_access_token, get_current_active_user, decode_token
+from src.model.auth import NewUser, User, PublicUser, Token
+from src.service.auth import add_user, authenticate_user, create_access_token, get_current_active_user, decode_token
 from src.config import get_settings
 from src.errors import Duplicate
 

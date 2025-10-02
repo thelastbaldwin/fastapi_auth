@@ -6,11 +6,10 @@ from pwdlib import PasswordHash
 from datetime import datetime, timezone, timedelta, timezone
 import jwt
 from jwt.exceptions import InvalidTokenError
-from src.model.user import User
-from src.model.auth import TokenData
+from src.model.auth import TokenData, User, NewUser
 from src.data.init import SessionDep
-from src.data.user import get_user, get_user_by_username
-from src.util.auth import verify_password
+import src.data.user as userData
+from src.util.auth import verify_password, get_password_hash
 from src.config import get_settings
 from src.errors import Missing
 
@@ -25,6 +24,16 @@ credentials_exception = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
+def add_user(newUser: NewUser, db: Session) -> User:
+    toAdd = User(
+        username=newUser.username,
+        email=newUser.email,
+        full_name=newUser.full_name,
+        hashed_password=get_password_hash(newUser.password)
+    )
+
+    return userData.add_user(toAdd, db)
+
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
@@ -37,7 +46,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 def authenticate_user(username: str, password: str, db: Session):
     try:
-        user = get_user_by_username(username, db)
+        user = userData.get_user_by_username(username, db)
     except Missing:
         return False
     if not user:
@@ -59,7 +68,7 @@ def decode_token(token) -> TokenData:
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: SessionDep):
     token_data: TokenData = decode_token(token)
-    user = get_user(token_data.user_id, db)
+    user = userData.get_user(token_data.user_id, db)
     if user is None:
         raise credentials_exception
     return user

@@ -1,6 +1,7 @@
 from fastapi.exceptions import HTTPException
 from sqlmodel import create_engine, SQLModel, Session, StaticPool
 from datetime import timedelta
+from src.model.auth import NewUser
 import src.service.auth as service
 from src.data.init import get_session, get_settings
 import pytest
@@ -26,7 +27,25 @@ def client_fixture(session_fixture):
     app.dependency_overrides[get_session] = get_session_override  
     yield session
     SQLModel.metadata.drop_all(engine)
-    app.dependency_overrides.clear()  
+    app.dependency_overrides.clear()
+
+def test_add_user(db):
+    new_user = NewUser(
+        username="test",
+        full_name="test user",
+        email="test@test.com",
+        password="123456"
+    )
+
+    resp = service.add_user(new_user, db)
+
+    assert resp.id is not None
+    assert resp.username == new_user.username
+    assert resp.full_name == new_user.full_name
+    assert resp.email == new_user.email
+    assert resp.hashed_password != None
+    assert resp.hashed_password != new_user.password
+    assert resp.disabled == False
 
 
 def test_encode_decode_access_token():

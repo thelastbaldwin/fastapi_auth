@@ -1,7 +1,7 @@
 from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 from src.errors import Duplicate, Missing
-from src.model.user import User, PublicUser
+from src.model.auth import User, PublicUser
 
 def add_user(user: User, db: Session):
     try:

@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends
 from src.service.auth import get_current_active_user
-from src.model.user import User, PublicUser
+from src.model.auth import User, PublicUser
 
 router = APIRouter(prefix="/user", tags=["user"])
 
