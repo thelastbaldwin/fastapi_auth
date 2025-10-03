@@ -6,6 +6,7 @@ class Token(SQLModel):
 
 class TokenData(SQLModel):
     user_id: int | None = None
+    scopes: list[str] = []
 
 class UserScope(SQLModel, table = True):
     user_id: int = Field(default=None, foreign_key="user.id", primary_key=True)
@@ -13,6 +14,7 @@ class UserScope(SQLModel, table = True):
 
 class NewScope(SQLModel):
     name: str = Field(unique=True, index=True)
+    description: str | None = Field(default="")
 
 class Scope(NewScope, table=True):
     id: int | None = Field(default = None, primary_key=True, index=True)
