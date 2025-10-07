@@ -5,7 +5,7 @@ from datetime import timedelta
 from fastapi.security import OAuth2PasswordRequestForm
 from src.data.init import SessionDep
 from src.model.auth import NewUser, User, PublicUser, Token
-from src.service.auth import add_user, authenticate_user, create_access_token, get_current_active_user, decode_token, get_current_active_user_with_all_scopes
+from src.service.auth import add_user, authenticate_user, create_access_token, get_current_active_user, decode_token
 from src.config import get_settings
 from src.errors import Duplicate
 
