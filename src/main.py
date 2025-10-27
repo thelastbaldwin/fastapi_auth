@@ -1,8 +1,8 @@
 # import base64
 import base64
 from contextlib import asynccontextmanager
-from cryptography.hazmat.primitives import serialization
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from jwcrypto import jwk
 from .web.auth import router as authRouter
 from .web.user import router as userRouter
@@ -32,3 +32,5 @@ def json_web_key_set():
             public_jwk
         ]
     }
+
+app.mount("/login", StaticFiles(directory="src/static", html=True), name="static")
