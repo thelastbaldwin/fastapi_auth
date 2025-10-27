@@ -50,7 +50,7 @@ def test_encode_decode_access_token():
     settings = get_settings()
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = service.create_access_token(
-        data={"sub": "1"}, expires_delta=access_token_expires
+        data={"sub": "1", "scopes": ""}, expires_delta=access_token_expires
     )
 
     assert isinstance(access_token, str)

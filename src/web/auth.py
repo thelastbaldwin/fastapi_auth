@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from typing import Annotated
 from datetime import timedelta
-
+from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordRequestForm
 from src.data.init import SessionDep
+from src.data.user import get_user
 from src.model.auth import NewUser, User, PublicUser, Token
-from src.service.auth import add_user, authenticate_user, create_access_token, get_current_active_user, decode_token
+from src.service.auth import add_user, authenticate_user, create_access_token, decode_token
 from src.config import get_settings
 from src.errors import Duplicate
 
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 def access_token_payload(user: User):
     return {
         "sub": str(user.id),
-        "scope": " ".join([scope.name for scope in user.scopes])
+        "scopes": " ".join([scope.name for scope in user.scopes])
     }
 
 @router.post('/register', status_code=201, response_model=PublicUser)
@@ -28,29 +29,42 @@ async def register(
     except Duplicate as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=exc.msg)
 
+class RefreshBody(BaseModel):
+    refresh_token: str
 @router.post("/refresh")
 async def refresh_access_token(
-    current_user: Annotated[User, Depends(get_current_active_user)],    
-    refresh_token: Annotated[str | None, Cookie(alias="refresh_token")] = None, ):
+    body: RefreshBody,
+    db: SessionDep) -> Token:
     """
         Get a new access token, provided the refresh_token and current access_token are valid
     """
 
-    decode_token(refresh_token)
+    decoded = decode_token(body.refresh_token)
+    user = get_user(decoded.sub, db)
+    if user is None or user.disabled:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data=access_token_payload(current_user), expires_delta=access_token_expires
+        data=access_token_payload(user), expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 
+class TokenRespose(BaseModel):
+    access_token: str
+    token_type: str
+    refresh_token: str
+    expires_in: int
 
 @router.post("/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: SessionDep,
-    response: Response
-) -> Token:
+) -> TokenRespose:
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(
@@ -63,11 +77,11 @@ async def login_for_access_token(
         data=access_token_payload(user), expires_delta=access_token_expires
     )
 
-    # set refresh token on response as httpOnly cookie
     refresh_token = create_access_token(
         data={"sub": str(user.id)}, expires_delta=timedelta(minutes=settings.refresh_token_expire_minutes))
-    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
 
-    return Token(access_token=access_token, token_type="bearer")
+    return TokenRespose(
+        access_token=access_token, token_type="bearer",refresh_token=refresh_token, expires_in=settings.access_token_expire_minutes
+    )
 
                  

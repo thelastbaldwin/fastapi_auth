@@ -2,8 +2,6 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlmodel import create_engine, SQLModel, Session, StaticPool
 from src.data.init import get_session
-from src.service.auth import create_access_token
-from datetime import timedelta
 import pytest
 
 from src.main import app
@@ -107,8 +105,7 @@ def test_refresh(db):
             }
 
         # register
-        registerResponse = client.post('/auth/register', json=request)
-        registerJson = registerResponse.json()
+        client.post('/auth/register', json=request)
 
         # get token and refresh token
         tokenResponse = client.post('/auth/token', data={
@@ -116,48 +113,29 @@ def test_refresh(db):
             "password": request["password"]
         })
         tokenJson = tokenResponse.json()
-        client.cookies = tokenResponse.cookies
 
         # get new token from refresh
         refreshResponse = client.post(
             '/auth/refresh', 
-            headers={"Authorization": f"Bearer {tokenJson["access_token"]}"}, 
+            json={
+                "refresh_token": tokenJson["refresh_token"]
+            }
         )
         refreshJson = refreshResponse.json()
 
         assert refreshResponse.status_code == status.HTTP_200_OK
         assert isinstance(refreshJson["access_token"], str)
 
-
 def test_refresh_expired(db):
-    with TestClient(app) as client:
-        request = {
-                "username": "testeroni",
-                "full_name": "testy tester",
-                "email": "testytester@gmail.com",
-                "password": "123456"
-            }
+    # TODO
+    pass
 
-        # register
-        registerResponse = client.post('/auth/register', json=request)
-        registerJson = registerResponse.json()
 
-        # get auth and refresh tokens
-        tokenResponse = client.post('/auth/token', data={
-            "username": request["username"],
-            "password": request["password"]
-        })
-        
-        # create an auth_token in the past
-        expired_auth_token = create_access_token(
-            data={"sub": str(registerJson["id"])}, 
-            expires_delta=timedelta(minutes=-5))
-        
-        # use the good refresh token and the bad auth_token
-        client.cookies = tokenResponse.cookies
-        refreshResponse = client.post("/auth/refresh", headers={"authorization": f"Bearer {expired_auth_token}"})
-
-        # expect a 401
-        assert refreshResponse.status_code == status.HTTP_401_UNAUTHORIZED
+def test_refresh_disabled_user(db):
+    """
+    TODO: register a user, get tokens, disable user, try to refresh, expect failure
+    """
+    pass
+   
         
 

@@ -1,8 +1,8 @@
 from typing import Annotated, List
 import base64
 from sqlmodel import Session
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, status, Security
+from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from pwdlib import PasswordHash
 from datetime import datetime, timezone, timedelta, timezone
 import jwt
@@ -60,12 +60,26 @@ def decode_token(token) -> TokenData:
     try:
         payload = jwt.decode(token, key=base64.b64decode(settings.public_key), algorithms=[settings.user_token_algorithm], options={"verify_exp": True})
         sub = payload.get("sub")
+        scopes = payload.get("scopes")
         if sub is None:
             raise credentials_exception
-        token_data = TokenData(sub=int(sub))
+        token_data = TokenData(sub=int(sub), scopes=payload.get("scopes").split(' ') if scopes else [])
         return token_data
     except InvalidTokenError:
         raise credentials_exception
+    
+def TokenDep(token: Annotated[str, Depends(oauth2_scheme)]) -> TokenData:
+    return decode_token(token);
+    
+async def validate_token(security_scopes: SecurityScopes, token: Annotated[TokenData, Depends(TokenDep)]) -> TokenData:
+    if len(security_scopes.scopes):
+        scope_set = set(token.scopes)
+        for required_scope in security_scopes.scopes:
+            if required_scope not in scope_set:
+                raise credentials_exception
+
+    return token
+
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: SessionDep):
     token_data: TokenData = decode_token(token)
@@ -80,11 +94,3 @@ def get_current_active_user(
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive User")
     return current_user
-
-def get_current_active_user_with_all_scopes(scopes: List[str]):
-    def inner_function(current_user: Annotated[User, Depends(get_current_active_user)]):
-        if all_scopes(current_user, scopes):
-            return current_user
-        raise credentials_exception
-
-    return inner_function

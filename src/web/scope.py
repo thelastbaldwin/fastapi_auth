@@ -1,16 +1,16 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Security
 import src.data.auth as data
 from src.data.init import SessionDep
-from src.model.auth import User, NewScope
-from src.service.auth import get_current_active_user_with_all_scopes
+from src.model.auth import User, NewScope, TokenData
+from src.service.auth import validate_token
 from src.errors import Missing, Duplicate
 
 router = APIRouter(prefix="/scope", tags=["authorization"])
 
 @router.get("")
 async def get_scopes(
-        _current_user: Annotated[User, Depends(get_current_active_user_with_all_scopes(['scopes:read']))], 
+        _token: Annotated[TokenData, Security(validate_token, scopes=['scopes:read'])], 
         db: SessionDep):
     """
         Get a list of scopes. Requires scope 'scopes:read'
@@ -19,7 +19,7 @@ async def get_scopes(
 
 @router.post("")
 async def add_scope(
-    _current_user: Annotated[User, Depends(get_current_active_user_with_all_scopes(['scopes:create']))], 
+    _token: Annotated[TokenData, Security(validate_token, scopes=['scopes:create'])], 
     db: SessionDep,
     scope: NewScope 
 ): 
@@ -33,7 +33,7 @@ async def add_scope(
 
 @router.delete("/{id}")
 async def delete_scope(
-    _current_user: Annotated[User, Depends(get_current_active_user_with_all_scopes(['scopes:delete']))], 
+    _token: Annotated[TokenData, Security(validate_token, scopes=['scopes:delete'])], 
     db: SessionDep,
     id: int,
 ):
@@ -46,7 +46,8 @@ async def delete_scope(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=exc.msg)
 
 @router.patch("/assign/{scope_id}/user/{user_id}", status_code=204)
-async def assign_scope_to_user(_current_user: Annotated[User, Depends(get_current_active_user_with_all_scopes(['scopes:assign']))], 
+async def assign_scope_to_user(
+    _token: Annotated[TokenData, Security(validate_token, scopes=['scopes:assign'])], 
     db: SessionDep, 
     user_id: str,
     scope_id: str):
@@ -63,7 +64,7 @@ async def assign_scope_to_user(_current_user: Annotated[User, Depends(get_curren
     
 
 @router.patch("/unassign/{scope_id}/user/{user_id}", status_code=204)
-async def unassign_scope_to_user(_current_user: Annotated[User, Depends(get_current_active_user_with_all_scopes(['scopes:assign']))], 
+async def unassign_scope_to_user(_token: Annotated[TokenData, Security(validate_token, scopes=['scopes:assign'])], 
     db: SessionDep, 
     user_id: str,
     scope_id: str):
