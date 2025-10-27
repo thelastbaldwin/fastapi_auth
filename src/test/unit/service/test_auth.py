@@ -57,7 +57,7 @@ def test_encode_decode_access_token():
 
     token_data = service.decode_token(access_token)
 
-    assert token_data.user_id == 1
+    assert token_data.sub == 1
 
 def test_decode_access_token_invalid():
     access_token_expires = timedelta(minutes=-5)

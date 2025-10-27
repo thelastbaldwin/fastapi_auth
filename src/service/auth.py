@@ -59,17 +59,17 @@ def authenticate_user(username: str, password: str, db: Session):
 def decode_token(token) -> TokenData:
     try:
         payload = jwt.decode(token, key=base64.b64decode(settings.public_key), algorithms=[settings.user_token_algorithm], options={"verify_exp": True})
-        user_id = payload.get("sub")
-        if user_id is None:
+        sub = payload.get("sub")
+        if sub is None:
             raise credentials_exception
-        token_data = TokenData(user_id=int(user_id))
+        token_data = TokenData(sub=int(sub))
         return token_data
     except InvalidTokenError:
         raise credentials_exception
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: SessionDep):
     token_data: TokenData = decode_token(token)
-    user = userData.get_user(token_data.user_id, db)
+    user = userData.get_user(token_data.sub, db)
     if user is None:
         raise credentials_exception
     return user

@@ -5,7 +5,7 @@ class Token(SQLModel):
     token_type: str
 
 class TokenData(SQLModel):
-    user_id: int | None = None
+    sub: int | None = None
     scopes: list[str] = []
 
 class UserScope(SQLModel, table = True):
