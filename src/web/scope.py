@@ -2,7 +2,8 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, status, Security
 import src.data.auth as data
 from src.data.init import SessionDep
-from src.model.auth import User, NewScope, TokenData
+from src.model.token import TokenData
+from src.model.auth import NewScope
 from src.service.auth import validate_token
 from src.errors import Missing, Duplicate
 

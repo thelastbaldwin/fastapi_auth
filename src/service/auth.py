@@ -1,13 +1,14 @@
 from typing import Annotated, List
 import base64
 from sqlmodel import Session
-from fastapi import Depends, HTTPException, status, Security
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from pwdlib import PasswordHash
 from datetime import datetime, timezone, timedelta, timezone
 import jwt
 from jwt.exceptions import InvalidTokenError
-from src.model.auth import TokenData, User, NewUser
+from src.model.token import TokenData
+from src.model.auth import User, NewUser
 from src.data.init import SessionDep
 import src.data.user as userData
 from src.util.auth import verify_password, get_password_hash, all_scopes

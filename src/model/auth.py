@@ -1,13 +1,5 @@
 from sqlmodel import Field, SQLModel, Relationship
 
-class Token(SQLModel):
-    access_token: str
-    token_type: str
-
-class TokenData(SQLModel):
-    sub: int | None = None
-    scopes: list[str] = []
-
 class UserScope(SQLModel, table = True):
     user_id: int = Field(default=None, foreign_key="user.id", primary_key=True)
     scope_id: int = Field(default=None, foreign_key="scope.id", primary_key=True)
@@ -28,10 +20,6 @@ class PublicUser(SQLModel):
 class BaseUser(PublicUser):
     email: str  = Field(unique=True)
     disabled: bool = Field(default=False)
-
-# class Client(SQLModel, table=True):
-#     id: int | None = Field(default = None, primary_key=True, index=True)
-
 
 class NewUser(BaseUser):
     password: str = Field()

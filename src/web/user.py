@@ -1,7 +1,8 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, Security
-from src.service.auth import get_current_active_user, validate_token
-from src.model.auth import User, PublicUser, TokenData
+from fastapi import APIRouter, Security
+from src.service.auth import validate_token
+from src.model.token import TokenData
+from src.model.auth import User, PublicUser
 from src.data.init import SessionDep
 from src.data.user import get_user
 

@@ -5,7 +5,8 @@ from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordRequestForm
 from src.data.init import SessionDep
 from src.data.user import get_user
-from src.model.auth import NewUser, User, PublicUser, Token
+from src.model.token import Token
+from src.model.auth import NewUser, User, PublicUser
 from src.service.auth import add_user, authenticate_user, create_access_token, decode_token
 from src.config import get_settings
 from src.errors import Duplicate
