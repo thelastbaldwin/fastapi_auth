@@ -1,6 +1,6 @@
 from sqlmodel import create_engine, SQLModel, Session, StaticPool
 import src.service.auth as authService
-from src.model.auth import NewUser
+from src.model.auth import NewUser, NewScope
 import src.data.auth as data
 from src.data.init import get_session 
 from src.errors import Duplicate, Missing
@@ -30,21 +30,23 @@ def client_fixture(session):
 
 def test_create_scope(db):
     name = "scope:test"
-    scope = data.create_scope(name, db)
+    desc = "test scope"
+    scope = data.create_scope(NewScope(name=name, description=desc), db)
 
     assert scope.name == name
+    assert scope.description == desc
 
 def test_create_scope_duplicate(db):
     name = "scope:test"
-    data.create_scope(name, db)
+    data.create_scope(NewScope(name=name), db)
 
     with pytest.raises(Duplicate):
-        data.create_scope(name, db)
+        data.create_scope(NewScope(name=name), db)
 
 def test_get_scopes(db):
     names = "scope:test1", "scope:test2"
     for name in names:
-        data.create_scope(name, db)
+        data.create_scope(NewScope(name=name), db)
 
     result = data.get_scopes(db)
 
@@ -62,7 +64,7 @@ def test_get_scopes(db):
 
 def test_get_scope(db):
     name = "scope:test"
-    scope = data.create_scope(name, db)
+    scope = data.create_scope(NewScope(name=name), db)
 
     result = data.get_scope(scope.id, db)
     assert result.name == name
@@ -72,7 +74,7 @@ def test_get_scope_missing(db):
         data.get_scope("foo", db)
 
 def test_delete_scope(db):
-    scope = data.create_scope("scope:test", db)
+    scope = data.create_scope(NewScope(name="scope:test"), db)
 
     result = data.delete_scope(scope.id, db)
     assert result.id == scope.id
@@ -90,7 +92,7 @@ def test_assign_scope(db):
         password="123456"
     ), db=db)
     scope_name = "scope:test"
-    scope = data.create_scope(scope_name, db)
+    scope = data.create_scope(NewScope(name=scope_name), db)
 
     result = data.assign_scope(user.id, scope.id, db)
 
@@ -98,7 +100,7 @@ def test_assign_scope(db):
     assert scope_name in [scope.name for scope in user.scopes]
 
 def test_assign_scope_missing_user(db):
-    scope = data.create_scope("scope:test", db)
+    scope = data.create_scope(NewScope(name="scope:test"), db)
 
     with pytest.raises(Missing):
         data.assign_scope(1, scope.id, db)
@@ -123,7 +125,7 @@ def test_assign_scope_duplicate(db):
         password="123456"
     ), db=db)
     scope_name = "scope:test"
-    scope = data.create_scope(scope_name, db)
+    scope = data.create_scope(NewScope(name=scope_name), db)
 
     data.assign_scope(user.id, scope.id, db)
 
@@ -138,7 +140,7 @@ def test_unassign_scope(db):
         password="123456"
     ), db=db)
     scope_name = "scope:test"
-    scope = data.create_scope(scope_name, db)
+    scope = data.create_scope(NewScope(name=scope_name), db)
 
     assigned = data.assign_scope(user.id, scope.id, db)
     assert len(assigned.scopes) == 1
@@ -150,7 +152,7 @@ def test_unassign_scope(db):
 
 def test_unassign_scope_missing_user(db):
     scope_name = "scope:test"
-    scope = data.create_scope(scope_name, db)
+    scope = data.create_scope(NewScope(name=scope_name), db)
 
     with pytest.raises(Missing):
         data.unassign_scope(1, scope.id, db)
@@ -175,7 +177,7 @@ def test_unassign_scope_not_assigned(db):
     ), db=db)
     scope_name = "scope:test"
 
-    scope = data.create_scope(scope_name, db)
+    scope = data.create_scope(NewScope(name=scope_name), db)
 
     with pytest.raises(Missing):
         data.unassign_scope(user.id, scope.id, db)

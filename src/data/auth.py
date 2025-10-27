@@ -1,19 +1,19 @@
 from sqlmodel import select
-from src.model.auth import Scope
+from src.model.auth import Scope, NewScope
 from sqlalchemy.exc import IntegrityError
 from src.data.init import Session
 from src.data.user import get_user
 from src.errors import Missing, Duplicate
 
-def create_scope(name: str, db: Session):
-    scope = Scope(name=name)
+def create_scope(scope: NewScope, db: Session):
+    scope = Scope(name=scope.name, description=scope.description)
 
     try:
         db.add(scope)
         db.commit()
         db.refresh(scope)
     except IntegrityError:
-        raise Duplicate(msg = f"Scope {name} already exists")
+        raise Duplicate(msg = f"Scope {scope.name} already exists")
     
     return scope
 

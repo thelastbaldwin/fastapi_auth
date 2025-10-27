@@ -14,7 +14,7 @@ class UserScope(SQLModel, table = True):
 
 class NewScope(SQLModel):
     name: str = Field(unique=True, index=True)
-    description: str | None = Field(default="")
+    description: str | None = Field(default=None)
 
 class Scope(NewScope, table=True):
     id: int | None = Field(default = None, primary_key=True, index=True)
@@ -28,6 +28,10 @@ class PublicUser(SQLModel):
 class BaseUser(PublicUser):
     email: str  = Field(unique=True)
     disabled: bool = Field(default=False)
+
+# class Client(SQLModel, table=True):
+#     id: int | None = Field(default = None, primary_key=True, index=True)
+
 
 class NewUser(BaseUser):
     password: str = Field()

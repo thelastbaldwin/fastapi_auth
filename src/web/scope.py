@@ -27,7 +27,7 @@ async def add_scope(
         Define a new scope. Requires scope 'scopes:create'
     """
     try:
-        return data.create_scope(scope.name, db)
+        return data.create_scope(scope, db)
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=exc.msg)
 
