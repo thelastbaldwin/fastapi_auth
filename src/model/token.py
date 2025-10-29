@@ -6,4 +6,5 @@ class Token(SQLModel):
 
 class TokenData(SQLModel):
     sub: int | None = None
+    roles: list[str] = []
     scopes: list[str] = []

@@ -8,10 +8,10 @@ from datetime import datetime, timezone, timedelta, timezone
 import jwt
 from jwt.exceptions import InvalidTokenError
 from src.model.token import TokenData
-from src.model.auth import User, NewUser
+from src.model.user import User, NewUser
 from src.data.init import SessionDep
 import src.data.user as userData
-from src.util.auth import verify_password, get_password_hash, all_scopes
+from src.util.auth import verify_password, get_password_hash
 from src.config import get_settings
 from src.errors import Missing
 
@@ -81,7 +81,14 @@ async def validate_token(security_scopes: SecurityScopes, token: Annotated[Token
 
     return token
 
-
+def role_required(required_roles: list[str], token: Annotated[TokenData, Depends(TokenDep)]) -> TokenData:
+    role_set = set(required_roles)
+    for required_role in required_roles:
+        if required_role not in role_set:
+            raise credentials_exception
+        
+    return token
+    
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: SessionDep):
     token_data: TokenData = decode_token(token)
     user = userData.get_user(token_data.sub, db)

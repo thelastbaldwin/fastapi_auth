@@ -1,8 +1,7 @@
 from sqlmodel import select
-from src.model.auth import Scope, NewScope
+from src.model.scope import Scope, NewScope
 from sqlalchemy.exc import IntegrityError
 from src.data.init import Session
-from src.data.user import get_user
 from src.errors import Missing, Duplicate
 
 def create_scope(scope: NewScope, db: Session):
@@ -39,37 +38,37 @@ def delete_scope(id: str, db: Session):
 
     return scope
 
-def assign_scope(user_id: str, scope_id: str, db: Session):
-    user = get_user(user_id, db)
-    scope = get_scope(scope_id, db)
+# def assign_scope(user_id: str, scope_id: str, db: Session):
+#     user = get_user(user_id, db)
+#     scope = get_scope(scope_id, db)
 
-    user.scopes.append(scope)
+#     user.scopes.append(scope)
 
-    try: 
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    except IntegrityError:
-        db.rollback()
-        raise Duplicate(msg = f"User {user_id} already assigned scope {scope_id}")
+#     try: 
+#         db.add(user)
+#         db.commit()
+#         db.refresh(user)
+#     except IntegrityError:
+#         db.rollback()
+#         raise Duplicate(msg = f"User {user_id} already assigned scope {scope_id}")
     
-    return user
+#     return user
 
-def unassign_scope(user_id: str, scope_id: str, db: Session):
-    user = get_user(user_id, db)
-    scope = get_scope(scope_id, db)
+# def unassign_scope(user_id: str, scope_id: str, db: Session):
+#     user = get_user(user_id, db)
+#     scope = get_scope(scope_id, db)
     
-    try:
-        user.scopes.remove(scope)
-    except ValueError:
-        raise Missing(msg = f"User {user_id} not assigned scope {scope_id}")
+#     try:
+#         user.scopes.remove(scope)
+#     except ValueError:
+#         raise Missing(msg = f"User {user_id} not assigned scope {scope_id}")
     
-    try:
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    except IntegrityError:
-        db.rollback()
-        raise Missing(msg = f"User {user_id} not assigned scope {scope_id}")
+#     try:
+#         db.add(user)
+#         db.commit()
+#         db.refresh(user)
+#     except IntegrityError:
+#         db.rollback()
+#         raise Missing(msg = f"User {user_id} not assigned scope {scope_id}")
     
-    return user
+#     return user

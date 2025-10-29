@@ -13,7 +13,7 @@ test:
 	pytest -v --capture=no src/test
 
 delete-existing-keys:
-	rm jwtRS256*
+	rm -f jwtRS256*
 keys: delete-existing-keys
 	ssh-keygen -t rsa -b 4096 -m PEM -N "" -f jwtRS256.key
 	openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub

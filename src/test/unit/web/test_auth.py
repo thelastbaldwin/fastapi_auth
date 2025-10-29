@@ -36,7 +36,7 @@ def test_register(db):
             "password": "123456"
         }
 
-        response = client.post('/auth/register', json=request)
+        response = client.post('/user/register', json=request)
 
         resp = response.json()
 
@@ -55,9 +55,9 @@ def test_register_duplicate(db):
             "password": "123456"
         }
 
-        client.post('/auth/register', json=request)
+        client.post('/user/register', json=request)
         
-        duplicateResp = client.post('/auth/register', json=request)
+        duplicateResp = client.post('/user/register', json=request)
         json = duplicateResp.json()
 
         assert duplicateResp.status_code == status.HTTP_403_FORBIDDEN
@@ -72,9 +72,9 @@ def test_token(db):
                 "password": "123456"
             }
 
-        client.post('/auth/register', json=request)
+        client.post('/user/register', json=request)
 
-        resp = client.post('/auth/token', data={
+        resp = client.post('/auth/login', data={
             "username": request["username"],
             "password": request["password"]
         })
@@ -86,7 +86,7 @@ def test_token(db):
 
 def test_token_unauthorized(db):
     with TestClient(app) as client:      
-        resp = client.post('/auth/token', data={
+        resp = client.post('/auth/login', data={
             "username": "iamnotregistered",
             "password": "123456"
         })
@@ -105,10 +105,10 @@ def test_refresh(db):
             }
 
         # register
-        client.post('/auth/register', json=request)
+        client.post('/user/register', json=request)
 
         # get token and refresh token
-        tokenResponse = client.post('/auth/token', data={
+        tokenResponse = client.post('/auth/login', data={
             "username": request["username"],
             "password": request["password"]
         })

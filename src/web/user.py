@@ -1,12 +1,23 @@
 from typing import Annotated
-from fastapi import APIRouter, Security
-from src.service.auth import validate_token
+from fastapi import APIRouter, Security, HTTPException, status
+from src.service.auth import validate_token, add_user
 from src.model.token import TokenData
-from src.model.auth import User, PublicUser
+from src.model.user import User, PublicUser, NewUser
 from src.data.init import SessionDep
 from src.data.user import get_user
+from src.errors import Duplicate
 
 router = APIRouter(prefix="/user", tags=["user"])
+
+@router.post('/register', status_code=201, response_model=PublicUser)
+async def register(
+    new_user: NewUser,
+    db: SessionDep
+    ):
+    try:
+        return add_user(new_user, db)
+    except Duplicate as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=exc.msg)
 
 @router.get("/me/", response_model=PublicUser)
 async def read_users_me(

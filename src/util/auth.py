@@ -1,6 +1,10 @@
 from typing import List
 from pwdlib import PasswordHash
-from src.model.auth import User
+from src.model.client import Client
+import random
+import string
+import base64
+import hashlib
 
 password_hash = PasswordHash.recommended()
 
@@ -10,26 +14,27 @@ def get_password_hash(password):
 def verify_password(plain_password, hashed_password):
     return password_hash.verify(plain_password, hashed_password)
 
-def all_scopes(user: User, scopes: List[str]):
+def all_scopes(client: Client, scopes: List[str]):
     """
-        verify that the user has each of the scopes provided
+        verify that the client has each of the scopes provided
     """
-    user_scopes = {scope.name for scope in user.scopes}
+    client_scopes = {scope.name for scope in client.scopes}
 
     for scope in scopes:
-        if scope not in user_scopes:
+        if scope not in client_scopes:
             return False
     
     return True
 
-def one_scope(user: User, scopes: List[str]):
+def random_string(length):
     """
-        verify that the user has one of the scopes provided
+    Generates a random string of a given length,
+    containing a mix of uppercase letters, lowercase letters, and digits.
     """
-    user_scopes = {scope.name for scope in user.scopes}
-    for scope in scopes:
-        if scope in user_scopes:
-            return True
-        
-    return False
+    characters = string.ascii_letters + string.digits
+    random_string = ''.join(random.choice(characters) for i in range(length))
+    return random_string
+
+def process_code_verifier(code: str, _method:str = "S256")-> str:
+    return base64.b64encode(hashlib.sha256(code));
     

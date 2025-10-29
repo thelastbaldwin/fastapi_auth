@@ -1,7 +1,7 @@
 from fastapi.exceptions import HTTPException
 from sqlmodel import create_engine, SQLModel, Session, StaticPool
 from datetime import timedelta
-from src.model.auth import NewUser
+from src.model.user import NewUser
 import src.service.auth as service
 from src.data.init import get_session, get_settings
 import pytest
